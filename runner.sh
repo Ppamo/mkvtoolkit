@@ -62,5 +62,7 @@ fi
 printf -- "> Starting new container\n"
 docker run -ti --name $APP --rm --platform linux/amd64 \
 	--volume "$VIDEOS":/videos \
+	$DOCKER_ARGS \
 	--env COMMAND=$COMMAND \
+	--env ARGS="$ARGS" \
 	$IMAGE
