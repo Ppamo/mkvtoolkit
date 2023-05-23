@@ -1,21 +1,25 @@
 #!/usr/bin/bash
 
 IFS=$'\n'
+VPATH=/videos
+COMMAND=${COMMAND:=$1}
 
-setSerieFileTitle(){
-	FILES=$(find /videos -iname '*.mkv' )
+usage(){
+	printf "
+USAGE:
+	$0 [setSerieInfo|showTracks|setDefaultTrack] [ARGS]
+
+	Commands are:
+	- setTitle: Sets the title of the mkv files found in the /videos folder, based on the file's name
+	- showTracks: Show the mkv file's tracks information, separated by video (V), audio (A), subtitles (S).   An asterix in front of a track, means it is set as default, the displayed track information is basically track number and name.   And the end of the line, the  name of the file is displayed
+	- setDefaultTrack: Based on the information displayed in 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:SDH'
+"
+}
+
+setTitle(){
+	FILES=$(find $VPATH -iname '*.mkv' )
 	for i in $FILES ; do
 		FILETITLE=$(basename "$i" .mkv)
-		TEXT=$(dirname "$i")
-		SEASON=$(basename "$TEXT")
-		TEXT=$(dirname "$i")
-		SERIENAME=$(dirname "$TEXT")
-		SERIENAME=$(basename "$SERIENAME")
-		TITLE=${SERIENAME##* - }
-		YEAR=${SERIENAME%% - *}
-		TEXT=${SERIENAME% - *}
-		AUTHOR=${TEXT#* - }
-
 		printf "> Setting title '%s' to '%s'\n" "$FILETITLE" "$i"
 		mkvpropedit "$i" --edit info --set "title=$FILETITLE"
 		if [ $? -ne 0 ]; then
@@ -50,7 +54,7 @@ setDefaultTrack(){
 	SNAME=$(echo "$ARGS" | grep -Eo "S:[^;]+" )
 	SNAME=${SNAME#S:*}
 
-	FILES=$(find /videos -iname '*.mkv' )
+	FILES=$(find $VPATH -iname '*.mkv' )
 	for i in $FILES ; do
 		printf -- "> Analizing file \'$(basename $i)\'\n"
 		INFO=$(mkvinfo $i | sed "s/@/ /g" | sed "s/| + Track/@/g")
@@ -91,7 +95,7 @@ setDefaultTrack(){
 }
 
 showTracks() {
-	FILES=$(find /videos -iname '*.mkv' )
+	FILES=$(find $VPATH -iname '*.mkv' )
 	for i in $FILES ; do
 		INFO=$(mkvinfo $i | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
@@ -127,8 +131,11 @@ showTracks() {
 }
 
 case "$COMMAND" in
-	setSerieInfo)
-		setSerieFileTitle
+	"")
+		usage;
+		;;
+	setTitle)
+		setTitle
 		;;
 	showTracks)
 		showTracks
