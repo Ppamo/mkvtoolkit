@@ -39,7 +39,7 @@ getMatchInfo(){
 	TRN=$(echo "$1" | grep "+ Track number:")
 	TRN=${TRN#*|  + Track number: }
 	TRN=${TRN% (track ID for mkvmerge & mkvextract:*}
-	Lang=$(echo "$1" | grep -E "Language( \([^)]*\))?:")
+	Lang=$(echo "$1" | grep -E "Language( \([^)]*\))?:" | head -n 1)
 	Lang=${Lang#*: }
 	DTrack=$(echo "$1" | grep '+ "Default track" flag:')
 	DTrack=${DTrack#*: }
