@@ -30,6 +30,7 @@ setTitle(){
 }
 
 getMatchInfo(){
+	# printf ">> %s\n" "$1"
 	TYPE=$(echo "$1" | grep "+ Track type:")
 	TYPE=${TYPE#*: }
 	TRNumber=$(echo "$1" | grep "+ Track number:")
@@ -38,7 +39,7 @@ getMatchInfo(){
 	TRN=$(echo "$1" | grep "+ Track number:")
 	TRN=${TRN#*|  + Track number: }
 	TRN=${TRN% (track ID for mkvmerge & mkvextract:*}
-	Lang=$(echo "$1" | grep -E "Language \([^)]*\):")
+	Lang=$(echo "$1" | grep -E "Language( \([^)]*\))?:")
 	Lang=${Lang#*: }
 	DTrack=$(echo "$1" | grep '+ "Default track" flag:')
 	DTrack=${DTrack#*: }
@@ -65,7 +66,7 @@ setDefaultTrack(){
 	FILES=$(find $VPATH -iname "*.mkv" )
 	for i in $FILES ; do
 		printf -- "> Analizing file \'$(basename \"$i\")\'\n"
-		INFO=$(mkvinfo "$i" | sed "s/@/ /g" | sed "s/| + Track/@/g")
+		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
 		ARGS=''
 		while [[ "$INFO" =~ $PATTERN ]]; do
@@ -99,7 +100,7 @@ setDefaultTrack(){
 			INFO=${INFO/"${BASH_REMATCH[0]}"/}
 		done
 		LINE=$(printf -- "/usr/bin/mkvpropedit \"%s\" %s" "$i" "$ARGS")
-		# printf -- "> Executing:\n%s\n" "$LINE"
+		printf -- "> Executing:\n%s\n" "$LINE"
 		eval $LINE
 		if [ $? -ne 0 ]; then
 			printf "* FAILURE\n"
@@ -115,7 +116,7 @@ showTracks() {
 	COUNTER=0
 	for i in $FILES ; do
 		COUNTER=$(( COUNTER + 1 ))
-		INFO=$(mkvinfo "$i" | sed "s/@/ /g" | sed "s/| + Track/@/g")
+		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
 
 		VTRACK=''
@@ -135,7 +136,7 @@ showTracks() {
 					STRACK="$STRACK;${DT}${TRN}:${NAME}"
 					;;
 				*)
-					printf "> Missing track:\n%s\n" "$INFO"
+					# printf "> Missing track:\n%s\n" "$INFO"
 					;;
 			esac
 			unset DT
@@ -148,9 +149,14 @@ showTracks() {
 	done
 }
 
+__setTrackName(){
+	printf -- "> Editing file \'$(basename \"$1\")\'\n"
+	mkvpropedit "$1" --edit track:$2 --set name="$3"
+}
+
 setTrackName(){
 	printf -- "> Setting file track name:\n"
-	echo "> $ARGS"
+	# echo "> $ARGS"
 	ARGS="${ARGS}"
 	FileNumber=$(echo "$ARGS" | grep -Eo 'F:[^;]*')
 	FileNumber=${FileNumber#*:}
@@ -158,7 +164,7 @@ setTrackName(){
 	TrackNumber=${TrackNumber#*:}
 	Name=$(echo "$ARGS" | grep -Eo ';[^;]*$')
 	Name=${Name#*;}
-	printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
+	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
 
 	if [ -z "$FileNumber" -o -z "$TrackNumber" -o -z "$Name" ]; then
 		printf -- "> Error: no configuration detected\n"
@@ -168,11 +174,14 @@ setTrackName(){
 	COUNTER=0
 	FILES=$(find $VPATH -iname "*.mkv" )
 	for i in $FILES ; do
-		COUNTER=$(( COUNTER + 1 ))
-		[ $COUNTER -ne $FileNumber ] && continue
-		printf -- "> Editing file \'$(basename \"$i\")\'\n"
-		mkvpropedit "$i" --edit track:$TrackNumber --set name="$Name"
-		break
+		if [ "$FileNumber" == "*" ]; then
+			__setTrackName "$i" "$TrackNumber" "$Name"
+		else
+			COUNTER=$(( COUNTER + 1 ))
+			[ $COUNTER -ne $FileNumber ] && continue
+			__setTrackName "$i" "$TrackNumber" "$Name"
+			break
+		fi
 	done
 }
 
