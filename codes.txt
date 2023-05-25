@@ -1,0 +1,513 @@
+AAR	Afar
+ABK	Abkhazian
+ACE	Achinese (Aceh)
+ACH	Acoli
+ADA	Adangme(One of the Ghana language)
+ADY	Adyghe; Adygei
+AFA	Afro-Asiatic (Other)
+AFH	Afrihili
+AFR	Afrikaans
+AIN	Ainu
+AKA	Akan(One of the Ghana language)
+AKK	Akkadian (Babylonian)
+ALB	Albanian
+ALE	Aleut (an Eskimo language from Aleutian Islands)
+ALG	Algonquian languages
+ALT	Southern Altai
+AMH	Amharic (or Abyssinian-main language of Ethiopia)
+ANG	English-Old (ca.450-1100)
+ANP	Angika
+APA	Apache languages
+ARA	Arabic
+ARC	Aramaic (Syria)
+ARG	Aragonese
+ARM	Armenian (Hayeren)
+ARN	Araucanian (S.Central Chile)
+ARP	Arapaho
+ART	Artificial (Other)
+ARW	Arawak
+ASM	Assamese (Indo-Iranian sub family)
+AST	Asturian-Bable-Leonese-Asturleonese
+ATH	Athapascan languages
+AUS	Australianl anguages
+AVA	Avaric
+AVE	Avestan
+AWA	Awadhi
+AYM	Aymara (language from indigenous people near lake Titicaca basin in Peru and Bolivia)
+AZE	Azerbaijani (Azeri)
+BAD	Banda
+BAI	Bamileke languages
+BAK	Bashkir
+BAL	Baluchi
+BAM	Bambara
+BAN	Balinese
+BAQ	Basque
+BAS	Basa
+BAT	Baltic (Other)
+BEJ	Beja (spoken near Ethiopia and ajoining regions)
+BEL	Belarussian (white russian)
+BEM	Bemba
+BEN	Bengali (Bangla)
+BER	Berber (Other)
+BHO	Bhojpuri
+BIH	Bihari (an east indic language)
+BIK	Bikol
+BIN	Bini
+BIS	Bislama (one of the major Vanuatu language)
+BLA	Siksika (Blackfoot)
+BNT	Bantu (Other)
+BOS	Bosnian
+BRA	Braj
+BRE	Breton (Brez)
+BTK	Batak (Indonesia)
+BUA	Buriat
+BUG	Buginese (Bugi)
+BUL	Bulgarian
+BUR	Burmese (Myanmasa)(belonging to the Tibeto-Burman sub family)
+BYN	Blin; Bilin
+CAD	Caddo
+CAI	Central American Indian (Oth.)
+CAK	Cakchiquel, Kaqchikel
+CAR	Carib
+CAT	Catalan
+CAU	Caucasian (Other)
+CEB	Cebuano
+CEL	Celtic (Other)
+CHA	Chamorro (Guam and Northern Mariana Islands)
+CHB	Chibcha (Colombia)
+CHE	Chechen
+CHG	Chagatai
+CHI	Chinese (Zhongwen)
+CHK	Chuukese
+CHM	Mari
+CHN	Chinookjargon
+CHO	Choctaw
+CHP	Chipewyan
+CHR	Cherokee
+CHU	Church Slavic
+CHV	Chuvash
+CHY	Cheyenne
+CJS	Shor
+CMC	Chamic languages
+CMN	Mandarin Dialect
+CNR	Montenegrin
+COP	Coptic
+COR	Cornish
+COS	Corsican
+CPE	Creoles and pidgins-English-based (Other)
+CPF	Creoles and pidgins-French-based (Other)
+CPP	Creoles and pidgins-Portuguese-based (Other)
+CRE	Cree
+CRH	Crimean Tatar; Crimean Turkish
+CRP	Creoles and pidgins (Other)
+CSB	Kashubian
+CUS	Cushitic (Other)
+CZE	Czech
+DAK	Dakota
+DAN	Danish
+DAR	Dargwa
+DAY	Dayak
+DEL	Delaware
+DEN	Slave (Athapascan)
+DGR	Dogrib
+DIN	Dinka
+DIV	Divehi (Maldives)
+DJC	Dar Daju Daju
+DOI	Dogri
+DRA	Dravidian (Other)
+DSB	Lower Sorbian
+DUA	Duala
+DUM	Dutch-Middle (ca.1050-1350)
+DUT	Dutch
+DYU	Dyula
+DZO	Dzongkha (Bhutani)
+EFI	Efik
+EGY	Egyptian (Ancient)
+EKA	Ekajuk
+ELX	Elamite
+ENG	English
+ENM	English-Middle (1100-1500)
+EPO	Esperanto
+EST	Estonian (Eesti)
+EWE	Ewe (mainl anguage of Togo)
+EWO	Ewondo
+FAN	Fang (Equatorial Guinea and Gabon)
+FAO	Faroese (Faeroese Island)
+FAT	Fanti (One of the Ghana language)
+FIJ	Fijian
+FIL	Filipino; Pilipino
+FIN	Finnish (Suomi)
+FIU	Finno-Ugrian (Lapland language)
+FNG	Fanagalo
+FON	Fon (Official language of Benin with French)
+FRE	French
+FRM	French-Middle (ca.1400-1600)
+FRO	French-Old (ca.842-1400)
+FRR	Northern Frisian
+FRS	Eastern Frisian
+FRY	Frisian (Frysk)
+FUL	Fulah (From Senegal to eastern Sudan)
+FUR	Friulian
+GAA	Ga
+GAY	Gayo
+GBA	Gbaya
+GEM	Germanic (Other)
+GEO	Georgian (Kartuli)
+GER	German
+GEZ	Geez(classical Ethiopic)
+GIL	Gilbertese (Kiribati)
+GLA	Gaelic (Scots)
+GLE	Irish
+GLG	Gallegan (Galician-Galego)
+GLV	Manx
+GMH	German-Middle High (ca.1050-1500)
+GOH	German-Old High (ca.750-1050)
+GON	Gondi
+GOR	Gorontalo
+GOT	Gothic
+GRB	Grebo
+GRC	Greek-Ancient (to1453)
+GRE	Greek-Modern (1453-)(Ellinika)
+GRN	Guarani (bolivia-paraguay-and south of Brezil)
+GSW	Swiss German
+GUJ	Gujarati (north west india)
+GWI	Gwich'in
+HAI	Haida
+HAT	Haitian; Haitian Creole
+HAU	Hausa (Nigeria)
+HAW	Hawaiian
+HAZ	Hazaragi
+HBS	Serbo-Croatian
+HEB	Hebrew (Iwrith)
+HER	Herero (Namibia)
+HIL	Hiligaynon
+HIM	Himachali
+HIN	Hindi (official language of northern India)
+HIT	Hittite
+HMN	Hmong
+HMO	HiriMotu
+HRV	Croatian
+HSB	Upper Sorbian
+HUN	Hungarian (Magyar)
+HUP	Hupa
+IBA	Iban
+IBO	Igbo
+ICE	Icelandic
+IDO	Ido
+III	Sichuan Yi; Nuosu
+IJO	Ijo
+IKU	Inuktitut
+ILE	Interlingue
+ILO	Iloko
+INA	Interlingua (International Auxilary Language Association)
+INC	Indic (Other)
+IND	Indonesian
+INE	Indo-European (Other)
+INH	Ingush
+IPK	Inupiak
+IRA	Iranian (Other)
+IRO	Iroquoian languages
+ITA	Italian
+JAV	Javanese
+JBO	Lojban
+JPN	Japanese (Nihongo)
+JPR	Judeo-Persian
+JRB	Judeo-Arabic
+KAA	Kara-Kalpak
+KAB	Kabyle
+KAC	Kachin
+KAL	Kalaallisut(or Greenlandic)
+KAM	Kamba (Kenya)
+KAN	Kannada
+KAR	Karen
+KAS	Kashmiri
+KAU	Kanuri
+KAW	Kawi
+KAZ	Kazakh
+KBD	Kabardian
+KEA	Kabuverdianu
+KHA	Khasi
+KHI	Khoisan (Other) (Namibia and West South Africa)
+KHM	Khmer (Cambodian)
+KHO	Khotanese (or Saka-EastIranian)
+KIK	Kikuyu (Northern Kenya)
+KIN	Kinyarwanda (Rwanda)
+KIR	Kirghiz
+KLS	Kalasha
+KMB	Kimbundu (Angola)
+KOK	Konkani (south indic)
+KOM	Komi
+KON	Kongo
+KOR	Korean
+KOS	Kosraean
+KPE	Kpelle
+KRC	Karachay-Balkar
+KRL	Karelian
+KRO	Kru
+KRU	Kurukh
+KUA	Kuanyama
+KUM	Kumyk
+KUR	Kurdish
+KUT	Kutenai
+LAD	Ladino
+LAH	Lahnda
+LAM	Lamba
+LAO	Lao (Laothian)
+LAT	Latin
+LAV	Latvian (lettish-letonian)
+LBJ	Ladakhi
+LEZ	Lezghian
+LIM	Limburgan; Limburger; Limburgish
+LIN	Lingala
+LIT	Lithuanian
+LKT	Lakota
+LOL	Mongo
+LOZ	Lozi
+LTZ	Letzeburgesch (luxembourg low german dialect)
+LUA	Luba-Lulua (Central Zaire)
+LUB	Luba-Katanga
+LUG	Ganda(or Baganda-Uganda)
+LUI	Luiseno
+LUN	Lunda
+LUO	Luo (Kenya and Tanzania)
+LUS	Lushai
+MAC	Macedonian
+MAD	Madurese
+MAG	Magahi
+MAH	Marshall
+MAI	Maithili
+MAK	Makasar
+MAL	Malayalam
+MAN	Mandingo (spoken in Sierra Leone-Liberia-Guinea-Ivory Coast-Mali and Burkina Faso)
+MAO	Maori
+MAP	Austronesian (Other-Malayo-Polynesian)
+MAR	Marathi
+MAS	Masai (Nomadic people of East Africa-Kenya and Tanzania)
+MAY	Malay
+MDF	Moksha
+MDR	Mandar
+MEN	Mende(Sierra Leone)
+MEY	Hassaniyya
+MGA	Irish-Middle(900-1200)
+MIC	Micmac
+MIN	Minangkabau
+MIS	Miscellaneous languages
+MKH	Mon-Khmer (Other)
+MLG	Malagasy
+MLT	Maltese
+MNC	Manchu
+MNI	Manipuri
+MNO	Manobo languages
+MOH	Mohawk
+MOL	Moldavian
+MON	Mongolian
+MOS	Mossi(More)
+MUL	Multiple languages
+MUN	Mundal anguages
+MUS	Creek(Muskogee)
+MWL	Mirandese
+MWR	Marwari
+MYN	Mayan languages
+MYV	Erzya
+NAH	Aztec (Nahuatl)
+NAI	North American Indian (Other)
+NAP	Neapolitan
+NAQ	Khoekhoe, Nama (Namibia)
+NAU	Nauru
+NAV	Navajo
+NBL	Ndebele-South (Zimbabwe-Botswana)
+NDE	Ndebele-North (Zimbabwe-Botswana)
+NDO	Ndonga
+NDS	Low German; Low Saxon; German, Low; Saxon, Low
+NEP	Nepali
+NEW	Newari
+NIA	Nias
+NIC	Niger-Kordofanian (Other)
+NIU	Niuean (Niue Island)
+NNO	Norwegian Nynorsk; Nynorsk, Norwegian
+NOB	Bokmål, Norwegian; Norwegian Bokmål
+NOD	Northern Thai
+NOG	Nogai
+NON	Norse-Old
+NOR	Norwegian
+NQO	N'Ko
+NSO	Sohto-Northern
+NUB	Nubian languages
+NWC	Classical Newari; Old Newari; Classical Nepal Bhasa
+NYA	Nyanja
+NYM	Nyamwezi
+NYN	Nyankole
+NYO	Nyoro
+NZI	Nzima
+OCI	Occitan (post1500)
+OJI	Ojibwa
+ORI	Oriya
+ORM	Oromo (Galla or Afan) (West and South Ethiopia and Kenya)
+OSA	Osage
+OSS	Ossetic
+OTA	Turkish-Ottoman(1500-1928)
+OTO	Otomian languages
+PAA	Papuan(Other)
+PAG	Pangasinan
+PAL	Pahlavi
+PAM	Pampanga
+PAN	Panjabi(language of Punjab)
+PAP	Papiamento
+PAU	Palauan (Palau Island in Micronesia)
+PEO	Persian-Old (ca.600-400B.C.)
+PER	Persian (Farsi)
+PEZ	Eastern Penan
+PHI	Philippine (Other)
+PHN	Phoenician
+PLI	Pali
+POL	Polish
+PON	Pohnpeian
+POR	Portuguese
+PRA	Prakrit languages
+PRO	Provencal-Old (to1500)
+PRS	Afghan Persian, Dari
+PUS	Pushto (or Pachto-Afghan)
+QSI	Silent Film
+QUE	Quechua(Bolivia-Peru and Ecuador)
+RAJ	Rajasthani
+RAP	Rapanui
+RAR	Rarotongan
+RCF	Réunion Creole French
+ROA	Romance (Other)
+ROH	Raeto-Romance
+ROM	Romany(Gipsy language)
+RUM	Romanian
+RUN	Rundi (or Kirundi)
+RUP	Aromanian; Arumanian; Macedo-Romanian
+RUS	Russian
+RUY	Central Okinawan
+SAD	Sandawe
+SAG	Sango (Central African Republic)
+SAH	Yakut
+SAI	South American Indian (Other)
+SAL	Salishan languages
+SAM	Samaritan Aramaic
+SAN	Sanskrit
+SAS	Sasak
+SAT	Santali
+SCN	Sicilian
+SCO	Scots
+SEL	Selkup
+SEM	Semitic (Other)
+SGA	Irish-Old (to900)
+SGN	Sign Languages
+SHN	Shan
+SID	Sidamo
+SIN	Sinhalese (Sri Lanka)
+SIO	Siouan languages
+SIT	Sino-Tibetan (Other)
+SLA	Slavic (Other)
+SLO	Slovak
+SLV	Slovenian
+SMA	Southern Sami
+SME	Northern Sami
+SMI	Sami languages
+SMJ	Lule Sami
+SMN	Inari Sami
+SMO	Samoan
+SMS	Skolt Sami
+SNA	Shona
+SND	Sindhi
+SNK	Soninke
+SOG	Sogdian
+SOM	Somali
+SON	Songhai
+SOT	Sotho (Southern-language of The Lesotho)
+SPA	Spanish
+SRD	Sardinian
+SRN	Sranan Tongo
+SRP	Serbian
+SRR	Serer
+SSA	Nilo-Saharan (Other)
+SSW	Swati (Siswant-Siswati)
+SUK	Sukuma
+SUN	Sundanese
+SUS	Susu(Guinea)
+SUX	Sumerian
+SWA	Swahili (abantu language over much of east Africa and the Congo region)
+SWE	Swedish
+SYC	Classical Syriac
+SYR	Syriac
+TAH	Tahitian
+TAI	Tai (Other)
+TAM	Tamil (part of India and Sri Lanka)
+TAT	Tatar
+TEL	Telugu
+TEM	Timne
+TER	Tereno
+TET	Tetum
+TGK	Tajik
+TGL	Tagalog (Philipines)
+THA	Thai
+TIB	Tibetan (Bodskad)
+TIG	Tigre
+TIR	Tigrinya
+TIV	Tiv
+TKL	Tokelau
+TLH	Klingon; tlh Ingan-Hol
+TLI	Tlingit
+TMH	Tuareg (Tamashek)
+TOG	Tonga (Nyasa)
+TON	Tonga (Tonga Islands)
+TPI	Tok Pisin
+TSI	Tsimshian
+TSN	Tswana (Setswana)
+TSO	Tsonga
+TUK	Turkmen
+TUM	Tumbuka
+TUP	Tupi languages
+TUR	Turkish
+TUT	Altaic (Other)
+TVL	Tuvalu
+TWI	Twi
+TYV	Tuvinian
+UDM	Udmurt
+UGA	Ugaritic
+UIG	Uighur
+UKR	Ukrainian
+UMB	Umbundu
+UND	Undetermined
+URD	Urdu (Pakistanian)
+UZB	Uzbek
+VAI	Vai
+VEN	Venda (South africa)
+VIE	Vietnamese
+VOL	Volapuk
+VOT	Votic
+WAK	Wakashan languages
+WAL	Walamo
+WAR	Waray
+WAS	Washo
+WEL	Welsh
+WEN	Sorbian languages
+WLN	Walloon
+WOD	Wolani
+WOL	Wolof (niger-congo language of senegambia)
+XAL	Kalmyk; Oirat
+XCA	Cantonese (Chinese dialect from Guangzhou)
+XCH	Chadic (spoken in Chad-northern Cameroon and northern Nigeria)
+XCI	Swiss Italian dialect
+XCS	Caspian
+XHO	Xhosa(Lesotho-Bantustan-South Africa)
+XLA	Laz
+XPY	Pygmies language
+XWA	Wallon
+YAO	Yao
+YAP	Yapese
+YID	Yiddish
+YOR	Yoruba (South West Nigeria and Benin)
+YPK	Yupik languages
+ZAP	Zapotec
+ZBL	Blissymbols; Blissymbolics; Bliss
+ZEN	Zenaga
+ZGH	Standard Moroccan Tamazight
+ZHA	Zhuang
+ZND	Zande
+ZUL	Zulu
+ZUN	Zuni
+ZZA	Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki

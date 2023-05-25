@@ -2,17 +2,19 @@
 
 IFS=$'\n'
 VPATH=/videos
+CODESFILE="/opt/iso_639-2_codes.txt"
 COMMAND=${COMMAND:=$1}
 
 usage(){
 	printf "
 USAGE:
-	$0 [setSerieInfo|showTracks|setDefaultTrack] [ARGS]
+	$0 [setSerieInfo|showTracks|setDefaultTrack|setTrackName] [ARGS]
 
 	Commands are:
-	- setTitle: Sets the title of the mkv files found in the /videos folder, based on the file's name
-	- showTracks: Show the mkv file's tracks information, separated by video (V), audio (A), subtitles (S).   An asterix in front of a track, means it is set as default, the displayed track information is basically track number and name.   And the end of the line, the  name of the file is displayed
-	- setDefaultTrack: Based on the information displayed in 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:SDH'
+	- setTitle: Sets the title of the mkv files, based on the file's name
+	- showTracks: Show the mkv file's tracks information, separated by video (V), audio (A), subtitles (S).   An asterix in front of a track, means it is set as default.   The displayed track information is basically track number and name.   And the end of the line, the file number and name of the file is displayed
+	- setDefaultTrack: Based on the information displayed with 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:SDH'
+	- setTrackName: Based on the information displayed with 'showTracks' command with the argument indicating the file, with the F prefix, track number with the T prefix and finally the new track name, e.g.: 'F:*;T:3:New Track Name'
 "
 }
 
@@ -185,6 +187,45 @@ setTrackName(){
 	done
 }
 
+convertToMKV(){
+	# mkvmerge -o "../output.mkv" "The Last of Us - S01E01 - When You're Lost in the Darkness.mp4" --title "The Last of Us - S01E01 - When You're Lost in the Darkness" --language 0:en --track-name 0:English 2_English.srt --language 0:en --track-name 0:"English SDH" "3_English SDH.srt" --language 0:bul --track-name 0:Bulgarian 4_Bulgarian.srt --language 0:cze 5_Czech.srt 6_Danish.srt
+	printf -- "> Converting files to mkv\n"
+	FILES=$(find $VPATH -iname "*.mp4" -o -iname "*.avi")
+	for i in $FILES ; do
+		FILENAME=$(basename "$i")
+		FILENAME=${FILENAME%.*}
+		printf "> Analizing '%s'\n" "$FILENAME"
+		ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
+		FILEPATH=$(dirname $i)
+		SUBSPATH=$(find "$FILEPATH" -iname subs)
+		if [ -d "$SUBSPATH/$FILENAME" ]; then
+			SUBSCOUNT=0
+			for j in $(cd "$SUBSPATH/$FILENAME" && ls -1 *.srt | sort -n); do
+				# subs format: N_Name.srt
+				[ $SUBSCOUNT -eq 0 ] && printf -- "- Subtitles found!\n"
+				SUBNAME=$(basename $j .srt)
+				echo "$SUBNAME" | grep -E '^[0-9]+_' > /dev/null 2>&1
+				[ $? -eq 0 ] && SUBNAME=${SUBNAME#*_}
+				SUBNAME=${SUBNAME//_/ }
+				SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | grep -Eo "^[a-zA-Z]+")
+				if [ -z "$SUBCODE" ]; then
+					SUBCODE=$(grep -Ii "${SUBNAME%* SDH}" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
+				fi
+				ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$SUBSPATH/$FILENAME/$j" | sed 's/\n//')
+				SUBSCOUNT=$(( SUBSCOUNT + 1 ))
+			done
+			echo
+			printf -- "- Executing 'mkvmerge %s'\n" "$ARGS"
+			eval "mkvmerge $ARGS"
+			echo ">> $?"
+			if [ $? -ne 0 ]; then
+				printf -- "< Error executing command\n"
+				exit 1
+			fi
+		fi
+	done
+}
+
 case "$COMMAND" in
 	"")
 		usage;
@@ -200,6 +241,9 @@ case "$COMMAND" in
 		;;
 	setTrackName)
 		setTrackName
+		;;
+	convert)
+		convertToMKV
 		;;
 	*)
 		printf -- "ERROR: Command '%s' not valid\n" "$COMMAND"
