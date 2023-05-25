@@ -149,6 +149,9 @@ showTracks() {
 		STRACK=${STRACK#*;}
 		printf "V=%s A=%s S=%s - %s:%s\n" "$VTRACK" "$ATRACK" "$STRACK" "$COUNTER" "$(basename $i)"
 	done
+	if [ $COUNTER -eq 0 ]; then
+		printf -- "< No mkv files found!\n"
+	fi
 }
 
 __setTrackName(){
@@ -207,7 +210,7 @@ convertToMKV(){
 				echo "$SUBNAME" | grep -E '^[0-9]+_' > /dev/null 2>&1
 				[ $? -eq 0 ] && SUBNAME=${SUBNAME#*_}
 				SUBNAME=${SUBNAME//_/ }
-				SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | grep -Eo "^[a-zA-Z]+")
+				SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
 				if [ -z "$SUBCODE" ]; then
 					SUBCODE=$(grep -Ii "${SUBNAME%* SDH}" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
 				fi
@@ -217,11 +220,11 @@ convertToMKV(){
 			echo
 			printf -- "- Executing 'mkvmerge %s'\n" "$ARGS"
 			eval "mkvmerge $ARGS"
-			echo ">> $?"
 			if [ $? -ne 0 ]; then
 				printf -- "< Error executing command\n"
 				exit 1
 			fi
+			printf "\n\n"
 		fi
 	done
 }
