@@ -60,10 +60,9 @@ if [ $? -ne 0 ]; then
 fi
 
 printf -- "> Starting new container\n"
+shift
+shift
 docker run -ti --name $APP --rm --platform linux/amd64 \
 	--volume "$VIDEOS":/videos \
-	--volume $PWD:/res \
 	$DOCKER_ARGS \
-	--env COMMAND=$COMMAND \
-	--env ARGS="$ARGS" \
-	$IMAGE
+	$IMAGE "$COMMAND" $@

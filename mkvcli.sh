@@ -3,7 +3,6 @@
 IFS=$'\n'
 VPATH=/videos
 CODESFILE="/opt/iso_639-2_codes.txt"
-COMMAND=${COMMAND:=$1}
 
 usage(){
 	printf "
@@ -53,8 +52,8 @@ getMatchInfo(){
 
 setDefaultTrack(){
 	printf -- "> Setting default tracks flags\n"
-	echo "> $ARGS"
-	ARGS="${ARGS};"
+	echo "> $1"
+	ARGS="$1;"
 	ANAME=$(echo "$ARGS" | grep -Eo "A:[^;]+" )
 	ANAME=${ANAME#A:*}
 	SNAME=$(echo "$ARGS" | grep -Eo "S:[^;]+" )
@@ -161,14 +160,14 @@ __setTrackName(){
 
 setTrackName(){
 	printf -- "> Setting file track name:\n"
-	# echo "> $ARGS"
-	ARGS="${ARGS}"
+	ARGS="$1"
 	FileNumber=$(echo "$ARGS" | grep -Eo 'F:[^;]*')
 	FileNumber=${FileNumber#*:}
 	TrackNumber=$(echo "$ARGS" | grep -Eo "T:[^;]*")
 	TrackNumber=${TrackNumber#*:}
 	Name=$(echo "$ARGS" | grep -Eo ';[^;]*$')
 	Name=${Name#*;}
+	Name=${Name//_/ }
 	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
 
 	if [ -z "$FileNumber" -o -z "$TrackNumber" -o -z "$Name" ]; then
@@ -191,7 +190,6 @@ setTrackName(){
 }
 
 convertToMKV(){
-	# mkvmerge -o "../output.mkv" "The Last of Us - S01E01 - When You're Lost in the Darkness.mp4" --title "The Last of Us - S01E01 - When You're Lost in the Darkness" --language 0:en --track-name 0:English 2_English.srt --language 0:en --track-name 0:"English SDH" "3_English SDH.srt" --language 0:bul --track-name 0:Bulgarian 4_Bulgarian.srt --language 0:cze 5_Czech.srt 6_Danish.srt
 	printf -- "> Converting files to mkv\n"
 	FILES=$(find $VPATH -iname "*.mp4" -o -iname "*.avi")
 	for i in $FILES ; do
@@ -229,24 +227,26 @@ convertToMKV(){
 	done
 }
 
+COMMAND=$1
+shift
 case "$COMMAND" in
 	"")
-		usage;
+		usage
 		;;
 	setTitle)
-		setTitle
+		setTitle  $@
 		;;
 	showTracks)
-		showTracks
+		showTracks $@
 		;;
 	setDefaultTrack)
-		setDefaultTrack
+		setDefaultTrack $@
 		;;
 	setTrackName)
-		setTrackName
+		setTrackName $*
 		;;
 	convert)
-		convertToMKV
+		convertToMKV $@
 		;;
 	*)
 		printf -- "ERROR: Command '%s' not valid\n" "$COMMAND"
