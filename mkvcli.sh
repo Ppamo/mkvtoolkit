@@ -10,10 +10,11 @@ USAGE:
 	$0 [setSerieInfo|showTracks|setDefaultTrack|setTrackName] [ARGS]
 
 	Commands are:
-	- setTitle: Sets the title of the mkv files, based on the file's name
-	- showTracks: Show the mkv file's tracks information, separated by video (V), audio (A), subtitles (S).   An asterix in front of a track, means it is set as default.   The displayed track information is basically track number and name.   And the end of the line, the file number and name of the file is displayed
-	- setDefaultTrack: Based on the information displayed with 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:SDH'
-	- setTrackName: Based on the information displayed with 'showTracks' command with the argument indicating the file, with the F prefix, track number with the T prefix and finally the new track name, e.g.: 'F:*;T:3:New Track Name'
+	- setTitle: Sets the title of the mkv files, based on the file's name, it requires no arguments since the title is calculated from the file name.
+	- showTracks: Show the mkv file's tracks information, separated by video (V), audio (A), subtitles (S).   An asterix in front of a track, means it is set as default.   The displayed track information is basically track number and name.   And the end of the line, the file number and name of the file is displayed.
+	- setDefaultTrack: Based on the information displayed with 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:English_SDH'.
+	- setTrackName: Based on the information displayed with 'showTracks' command with the argument indicating the file, with the F prefix, track number with the T prefix and finally the new track name, e.g.: 'F:*;T:3:New_Track_Name'.   Not spaces allowed, all underscore characters will be converted into spaces through the process.   An asterisk as file number means all files.
+	- convert: It searches for .mp4 or .avi files and subs, in order to create .mkv files using theses as tracks.   For the subs only .str are used and the script will search for those in the 'subs/[video file name without extension]/' path.   If the name of the subtitle file start with a number followed with and underscore, it will be used as a referential information about position and be removed as part of the track name, any underscore in the remaining name, will be converted into a space in the track name.
 "
 }
 
@@ -56,8 +57,10 @@ setDefaultTrack(){
 	ARGS="$1;"
 	ANAME=$(echo "$ARGS" | grep -Eo "A:[^;]+" )
 	ANAME=${ANAME#A:*}
+	ANAME=${ANAME//_/ }
 	SNAME=$(echo "$ARGS" | grep -Eo "S:[^;]+" )
 	SNAME=${SNAME#S:*}
+	SNAME=${SNAME//_/ }
 	printf -- "> Audio:%s - Subtitle:%s\n" "$ANAME" "$SNAME"
 	if [ -z "$ANAME$SNAME" ]; then
 		printf -- "> Error: no configuration detected\n"

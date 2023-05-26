@@ -15,8 +15,10 @@ To execute the *runner.sh* script you can call it whitout arguments and it will 
 The *runner.sh* script build the image if it is not exists on the first run, using the Dockerfile in the repo, installing mkvtoolnix and copying the mkvcli.sh script as entryopint.   After the image is built, a new container will start, mounting the videos path in the container and executing the tools in that path.
 
 The available commands are:
-- **showTracks**: This command will display a line for every mkv file found in the path, with the type, number and name on the track, indicating also if the default track's flag is set.
-- **setTitle**: Sets the title of the mkv file based on the file name.
+- **showTracks**: This command will display a line for every .mkv file found in the path, with the type, number and name on the track, indicating also if the default track's flag is set.
+- **setTitle**: Sets the title of the .mkv file based on the file name.
 - **setDefaultTrack**: Based on the args provided, it will set the default track flag on one of the track by type.
+- **setTrackName**: Change the name of a track in one or all files.
+- **convert**: Searches for .mp4 or .avi files and .srt in the same folder, to create a .mkv file with the files as tracks.
 
 More details about de command will be found in the usage output of the *runner.sh* script.
