@@ -15,6 +15,8 @@ USAGE:
 	- setDefaultTrack: Based on the information displayed with 'showTracks' command with the argument indicating the letter of the track's category followed by the track's name, as an example: 'A:Eng;S:English_SDH'.
 	- setTrackName: Based on the information displayed with 'showTracks' command with the argument indicating the file, with the F prefix, track number with the T prefix and finally the new track name, e.g.: 'F:*;T:3:New_Track_Name'.   Not spaces allowed, all underscore characters will be converted into spaces through the process.   An asterisk as file number means all files.
 	- convert: It searches for .mp4 or .avi files and subs, in order to create .mkv files using theses as tracks.   For the subs only .str are used and the script will search for those in the 'subs/[video file name without extension]/' path.   If the name of the subtitle file start with a number followed with and underscore, it will be used as a referential information about position and be removed as part of the track name, any underscore in the remaining name, will be converted into a space in the track name.
+	If only one video file is found, it will look for .srt files ending like '.[LANG].srt', where LANG is the name of the subtitle language, like 'EN' or 'ES', letters case are ignored.  Any srt file found with language definition will be added as a subtitle track, to the new file.
+
 "
 }
 
@@ -195,39 +197,63 @@ setTrackName(){
 convertToMKV(){
 	printf -- "> Converting files to mkv\n"
 	FILES=$(find $VPATH -iname "*.mp4" -o -iname "*.avi")
-	for i in $FILES ; do
-		FILENAME=$(basename "$i")
+	FILES_COUNT=$(echo "$FILES" | wc -l)
+	if [ "$FILES_COUNT" -eq 1 ]; then
+		# This is probably a movie, a single video file, with probably a single sub title in root folder
+		printf "> Found movie\n%s\n" "$FILES"
+		SUBS=$(find $VPATH -iname "*.srt")
+		SUBS_COUNT=$(echo "$SUBS" | wc -l)
+		FILENAME=$(basename "$FILES")
 		FILENAME=${FILENAME%.*}
-		printf "> Analizing '%s'\n" "$FILENAME"
-		ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
-		FILEPATH=$(dirname $i)
-		SUBSPATH=$(find "$FILEPATH" -iname subs)
-		if [ -d "$SUBSPATH/$FILENAME" ]; then
-			SUBSCOUNT=0
-			for j in $(cd "$SUBSPATH/$FILENAME" && ls -1 *.srt | sort -n); do
-				# subs format: N_Name.srt
-				[ $SUBSCOUNT -eq 0 ] && printf -- "- Subtitles found!\n"
-				SUBNAME=$(basename $j .srt)
-				echo "$SUBNAME" | grep -E '^[0-9]+_' > /dev/null 2>&1
-				[ $? -eq 0 ] && SUBNAME=${SUBNAME#*_}
-				SUBNAME=${SUBNAME//_/ }
-				SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
-				if [ -z "$SUBCODE" ]; then
-					SUBCODE=$(grep -Ii "${SUBNAME%* SDH}" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
+		ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${FILES%.*}" "$FILES" "$FILENAME")
+		if [ -n "$SUBS" ]; then
+			printf "> Found %d subs:\n%s\n" "$SUBS_COUNT" "$SUBS"
+			for i in $SUBS; do
+				echo "$i" | grep -Eo '\.[a-z]{2,4}\.' > /dev/null
+				if [ $? -eq 0 ]; then
+					LANG=$(echo "$i" | grep -Eo '\.[a-z]{2,4}\.' | grep -Eo "[a-z]{2,4}" | tr "[:lower:]" "[:upper:]")
+					printf "> Found lang %s in file '%s'\n%s\n" "$LANG" "$i" "$(file $i)"
+					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$LANG" "$LANG" "$i" | sed 's/\n//')
 				fi
-				ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$SUBSPATH/$FILENAME/$j" | sed 's/\n//')
-				SUBSCOUNT=$(( SUBSCOUNT + 1 ))
 			done
-			echo
-			printf -- "- Executing 'mkvmerge %s'\n" "$ARGS"
-			eval "mkvmerge $ARGS"
-			if [ $? -ne 0 ]; then
-				printf -- "< Error executing command\n"
-				exit 1
-			fi
-			printf "\n\n"
 		fi
-	done
+	else
+		for i in $FILES ; do
+			FILENAME=$(basename "$i")
+			FILENAME=${FILENAME%.*}
+			printf "> Analizing '%s'\n" "$FILENAME"
+			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
+			FILEPATH=$(dirname $i)
+			SUBSPATH=$(find "$FILEPATH" -iname subs)
+			if [ -d "$SUBSPATH/$FILENAME" ]; then
+				SUBSCOUNT=0
+				for j in $(cd "$SUBSPATH/$FILENAME" && ls -1 *.srt | sort -n); do
+					# subs format: N_Name.srt
+					[ $SUBSCOUNT -eq 0 ] && printf -- "- Subtitles found!\n"
+					SUBNAME=$(basename $j .srt)
+					echo "$SUBNAME" | grep -E '^[0-9]+_' > /dev/null 2>&1
+					[ $? -eq 0 ] && SUBNAME=${SUBNAME#*_}
+					SUBNAME=${SUBNAME//_/ }
+					SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
+					if [ -z "$SUBCODE" ]; then
+						SUBCODE=$(grep -Ii "${SUBNAME%* SDH}" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
+					fi
+					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$SUBSPATH/$FILENAME/$j" | sed 's/\n//')
+					SUBSCOUNT=$(( SUBSCOUNT + 1 ))
+				done
+				echo
+			fi
+		done
+	fi
+	if [ -n "$ARGS" ]; then
+		printf -- "- Executing 'mkvmerge %s'\n" "$ARGS"
+		eval "mkvmerge $ARGS"
+		if [ $? -ne 0 ]; then
+			printf -- "< Error executing command\n"
+			exit 1
+		fi
+		printf "\n\n"
+	fi
 }
 
 COMMAND=$1
