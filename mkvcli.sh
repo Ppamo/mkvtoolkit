@@ -8,7 +8,7 @@ BLUE="\e[34m"
 GREEN="\e[32m"
 YELLOW="\e[33m"
 BOLD="\e[1m"
-HIGHLIGHT="\e[7m"
+HIGHLIGHT="\e[4m"
 NC="\e[0m"
 
 usage(){
@@ -33,7 +33,7 @@ if [ $# -eq 0 ]; then
 fi
 
 setTitle(){
-	FILES=$(find $VPATH -iname '*.mkv' )
+	__getMkvVideoFiles
 	for i in $FILES ; do
 		FILETITLE=$(basename "$i" .mkv)
 		printf "> Setting title '%s' to '%s'\n" "$FILETITLE" "$i"
@@ -80,8 +80,8 @@ setDefaultTrack(){
 		printf -- "> Error: no configuration detected\n"
 		exit 1
 	fi
-
-	FILES=$(find $VPATH -iname "*.mkv" )
+	
+	__getVideoFiles
 	for i in $FILES ; do
 		printf -- "> Analizing file \'$(basename \"$i\")\'\n"
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
@@ -130,12 +130,12 @@ setDefaultTrack(){
 }
 
 showTracks() {
-	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \)  | sort )
+	__getVideoFiles
 	COUNTER=0
 	for i in $FILES ; do
 		COUNTER=$(( COUNTER + 1 ))
 		if [ "${i##*.}" != "mkv" ]; then
-			printf -- "%.2d:${HIGHLIGHT}%s${NC}\n" "$COUNTER" "$(basename $i)"
+			printf -- "%.2d\n${HIGHLIGHT}%s${NC}\n" "$COUNTER" "$(basename $i)"
 			continue
 		fi
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
@@ -211,11 +211,11 @@ setTrackName(){
 	fi
 
 	COUNTER=0
-	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \)  | sort )
+	__getVideoFiles
 	for i in $FILES ; do
 		if [ "$FileNumber" == "*" ]; then
 			if [ "${i##*.}" != "mkv" ]; then
-				printf -- "> Skipping file \'$(basename \"$1\")\'\n"
+				printf -- "> Skipping file \'$(basename \"$i\")\'\n"
 				continue
 			fi
 			__setTrackName "$i" "$TrackNumber" "$Name"
@@ -228,9 +228,28 @@ setTrackName(){
 	done
 }
 
+addTrack(){
+	printf -- "> Adding track to mkv file:\n"
+	printf "${BOLD}+ Write file number (* to all): _ "
+	read FileNumber
+	printf "+ Write track number: _ "
+	read TrackNumber
+	printf "+ Write new name: _ ${NC}"
+	read Name
+	Name=${Name//_/ }
+	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
+
+	if [ -z "$FileNumber" -o -z "$TrackNumber" -o -z "$Name" ]; then
+		printf -- "> Error: not enough data to complete the change\n"
+		exit 1
+	fi
+
+
+}
+
 convertToMKV(){
 	printf -- "> Converting files to mkv\n"
-	FILES=$(find $VPATH -iname "*.mp4" -o -iname "*.avi")
+	__getVideoFiles
 	FILES_COUNT=$(echo "$FILES" | wc -l)
 	if [ "$FILES_COUNT" -eq 1 ]; then
 		# This is probably a movie, a single video file, with probably a single sub title in root folder
@@ -252,6 +271,7 @@ convertToMKV(){
 			done
 		fi
 		__executeConvertion
+		__backupConvertedFiles "$FILES"
 	else
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
@@ -278,7 +298,17 @@ convertToMKV(){
 				done
 				echo
 			fi
+			if [ -z "$SUBSCOUNT" ]; then
+				# If no sub was found on folders, just look for a single file on root folder
+				SUBSFILES=$(find "$FILEPATH" -iname "*${FILENAME}*" -a -iname "*.srt")
+				for j in $SUBSFILES ; do
+					# printf -- ">> %s" "$j\n"
+					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "und" "Default" "$j" | sed 's/\n//')
+				done
+			fi
+			# printf "> ARGS: $ARGS\n"
 			__executeConvertion
+			__backupConvertedFiles "$i"
 		done
 	fi
 }
@@ -293,6 +323,29 @@ __executeConvertion(){
 		fi
 		printf "\n\n"
 	fi
+}
+
+__backupConvertedFiles(){
+	FILEPATH="$1"
+	DIRPATH="$(dirname $1)"
+	mkdir -p $DIRPATH/converted
+	FILENAME=$(basename $FILEPATH)
+	FILENAME=${FILENAME%.*}
+	OLDIFS=$IFS
+	IFS=$'\n'
+	FILESTOBACKUP=$(find "$DIRPATH" -type f -iname "*$FILENAME*" ! -iname "*.mkv" )
+	printf "> Backing up files:\n"
+	for i in $FILESTOBACKUP; do
+		mv -v "$i" "$DIRPATH/converted"
+	done
+}
+
+__getVideoFiles(){
+	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) ! -path "$VPATH/converted/*"  | sort )
+}
+
+__getMkvVideoFiles(){
+	FILES=$(find $VPATH -iname "*.mkv" ! -path "$VPATH/converted/*"  | sort )
 }
 
 COMMAND=$1
