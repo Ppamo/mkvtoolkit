@@ -143,6 +143,10 @@ showTracks() {
 		if [ -z "$TITLE" ]; then
 			TITLE="-"
 		fi
+		echo "$INFO" | grep "+ Track" >/dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			INFO=$(mkvinfo --track-info "$i" | grep -v "Simple block: " | grep -v "Frame with size" | grep -v "+ Cluster" | grep -v "+ Block" | grep -v "subentries will be skipped" | grep -v "Statistics for track number" | sed '0,/+ Tracks/d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
+		fi
 		PATTERN='@[^@]*'
 		# printf "> Track info:\n%s\n" "$INFO"
 		VTRACK=''
@@ -171,7 +175,7 @@ showTracks() {
 		VTRACK=${VTRACK#*;}
 		ATRACK=${ATRACK#*;}
 		STRACK=${STRACK#*;}
-		printf "%.2d:${BOLD}%s${NC}\n${BLUE}%s\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" \
+		printf "%.2d ${BOLD}%s${NC}\n   ${BLUE}%s\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" \
 			"$COUNTER" "$(basename $i)" "${TITLE}"  "$VTRACK" "$ATRACK" "$STRACK"
 	done
 	if [ $COUNTER -eq 0 ]; then
