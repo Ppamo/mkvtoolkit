@@ -175,7 +175,7 @@ showTracks() {
 		VTRACK=${VTRACK#*;}
 		ATRACK=${ATRACK#*;}
 		STRACK=${STRACK#*;}
-		printf "%.2d ${BOLD}%s${NC}\n   ${BLUE}%s\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" \
+		printf "%.2d\n${BOLD}%s${NC}\n${BLUE}%s\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" \
 			"$COUNTER" "$(basename $i)" "${TITLE}"  "$VTRACK" "$ATRACK" "$STRACK"
 	done
 	if [ $COUNTER -eq 0 ]; then
@@ -185,9 +185,10 @@ showTracks() {
 
 __setTrackName(){
 	OLDIFS=$IFS
+	FileName=$(basename "$1")
 	IFS=','
 	for i in $2; do
-		printf -- "> Editing track %s of file \'$(basename \"$1\")\'\n" "$i"
+		printf -- "> Editing track %s of file \'%s\'\n" "$i" "$FileName"
 		mkvpropedit "$1" --edit track:$i --set name="$3"
 	done
 	IFS=$OLDIFS
