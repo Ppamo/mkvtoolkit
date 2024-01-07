@@ -1,8 +1,14 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 IFS=$'\n'
 VPATH=/videos
 CODESFILE="/opt/iso_639-2_codes.txt"
+RED="\e[31m"
+BLUE="\e[34m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BOLD="\e[1m"
+NC="\e[0m"
 
 usage(){
 	printf "
@@ -19,6 +25,11 @@ USAGE:
 
 "
 }
+
+if [ $# -eq 0 ]; then
+	usage
+	exit 0
+fi
 
 setTitle(){
 	FILES=$(find $VPATH -iname '*.mkv' )
@@ -118,10 +129,14 @@ setDefaultTrack(){
 }
 
 showTracks() {
-	FILES=$(find $VPATH -iname "*.mkv" )
+	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \)  | sort )
 	COUNTER=0
 	for i in $FILES ; do
 		COUNTER=$(( COUNTER + 1 ))
+		if [ "${i##*.}" != "mkv" ]; then
+			printf -- "%.2d:${BOLD}%s${NC}\n" "$COUNTER" "$(basename $i)"
+			continue
+		fi
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
 
@@ -151,7 +166,7 @@ showTracks() {
 		VTRACK=${VTRACK#*;}
 		ATRACK=${ATRACK#*;}
 		STRACK=${STRACK#*;}
-		printf "V=%s A=%s S=%s - %s:%s\n" "$VTRACK" "$ATRACK" "$STRACK" "$COUNTER" "$(basename $i)"
+		printf "%.2d:${BOLD}%s${NC}\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" "$COUNTER" "$(basename $i)" "$VTRACK" "$ATRACK" "$STRACK"
 	done
 	if [ $COUNTER -eq 0 ]; then
 		printf -- "< No mkv files found!\n"

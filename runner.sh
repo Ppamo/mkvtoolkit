@@ -4,15 +4,16 @@ APP=mkvtoolkit
 VERSION=0.1.1
 IMAGE=${APP}.v${VERSION}
 REBUILD=${REBUILD:-0}
-COMMAND=$1
-VIDEOS=$2
+DEV=${DEV:-0}
+VIDEOS=$1
+COMMAND=$2
 BOLD="\033[1m"
 RESET="\033[0m"
 
 usage(){
 	printf -- "
 USAGE:
-	$0 [COMMAND] [FILES_PATH] [ARGS]
+	$0 [FILES_PATH] [COMMAND] [ARGS]
 
 This script start a container and execute a set of tools to get and set information about mkv files.
 The COMMAND indicates which action will be executed:
@@ -43,6 +44,7 @@ if [ ! -d "$VIDEOS" ]; then
 	exit 0
 fi
 
+
 if [ $REBUILD -eq 1 ]; then
 	docker images --format "{{.Repository}}:{{.Tag}}" | grep $IMAGE > /dev/null
 	if [ $? -eq 0 ]; then
@@ -64,7 +66,16 @@ fi
 printf -- "> Starting new container\n"
 shift
 shift
-docker run -ti --name $APP --rm --platform linux/amd64 \
-	--volume "$VIDEOS":/videos \
-	$DOCKER_ARGS \
-	$IMAGE "$COMMAND" $@
+
+if [ $DEV -eq 1 ]; then
+	docker run -ti --name $APP --rm --platform linux/amd64 \
+		--volume "$VIDEOS":/videos \
+		--volume "$PWD":/app \
+		--entrypoint /bin/bash \
+		--workdir /app \
+		$IMAGE
+else
+	docker run -ti --name $APP --rm --platform linux/amd64 \
+		--volume "$VIDEOS":/videos \
+		$IMAGE "$COMMAND" $@
+fi
