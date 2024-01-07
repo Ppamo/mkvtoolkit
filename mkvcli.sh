@@ -180,8 +180,13 @@ showTracks() {
 }
 
 __setTrackName(){
-	printf -- "> Editing file \'$(basename \"$1\")\'\n"
-	mkvpropedit "$1" --edit track:$2 --set name="$3"
+	OLDIFS=$IFS
+	IFS=','
+	for i in $2; do
+		printf -- "> Editing track %s of file \'$(basename \"$1\")\'\n" "$i"
+		mkvpropedit "$1" --edit track:$i --set name="$3"
+	done
+	IFS=$OLDIFS
 }
 
 setTrackName(){
