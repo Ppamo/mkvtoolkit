@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 APP=mkvtoolkit
-VERSION=0.1.1
+VERSION=0.1.2
 IMAGE=${APP}.v${VERSION}
 REBUILD=${REBUILD:-0}
 DEV=${DEV:-0}

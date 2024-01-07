@@ -185,24 +185,27 @@ __setTrackName(){
 
 setTrackName(){
 	printf -- "> Setting file track name:\n"
-	ARGS="$1"
-	FileNumber=$(echo "$ARGS" | grep -Eo 'F:[^;]*')
-	FileNumber=${FileNumber#*:}
-	TrackNumber=$(echo "$ARGS" | grep -Eo "T:[^;]*")
-	TrackNumber=${TrackNumber#*:}
-	Name=$(echo "$ARGS" | grep -Eo ';[^;]*$')
-	Name=${Name#*;}
+	printf "${BOLD}+ Write file number (* to all): _ "
+	read FileNumber
+	printf "+ Write track number: _ "
+	read TrackNumber
+	printf "+ Write new name: _ ${NC}"
+	read Name
 	Name=${Name//_/ }
 	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
 
 	if [ -z "$FileNumber" -o -z "$TrackNumber" -o -z "$Name" ]; then
-		printf -- "> Error: no configuration detected\n"
+		printf -- "> Error: not enough data to complete the change\n"
 		exit 1
 	fi
 
 	COUNTER=0
-	FILES=$(find $VPATH -iname "*.mkv" )
+	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \)  | sort )
 	for i in $FILES ; do
+		if [ "${i##*.}" != "mkv" ]; then
+			printf -- "> Skipping file \'$(basename \"$1\")\'\n"
+			continue
+		fi
 		if [ "$FileNumber" == "*" ]; then
 			__setTrackName "$i" "$TrackNumber" "$Name"
 		else
