@@ -138,8 +138,12 @@ showTracks() {
 			continue
 		fi
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
+		TITLE=$(echo "$INFO" | grep "| + Title: " | sed "s/| + Title: //")
+		if [ -z "$TITLE" ]; then
+			TITLE="-"
+		fi
 		PATTERN='@[^@]*'
-
+		# printf "> Track info:\n%s\n" "$INFO"
 		VTRACK=''
 		ATRACK=''
 		STRACK=''
@@ -166,7 +170,8 @@ showTracks() {
 		VTRACK=${VTRACK#*;}
 		ATRACK=${ATRACK#*;}
 		STRACK=${STRACK#*;}
-		printf "%.2d:${BOLD}%s${NC}\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" "$COUNTER" "$(basename $i)" "$VTRACK" "$ATRACK" "$STRACK"
+		printf "%.2d:${BOLD}%s${NC}\n${BLUE}%s\n${YELLOW}V=%s ${RED}A=%s ${GREEN}S=%s${NC}\n" \
+			"$COUNTER" "$(basename $i)" "${TITLE}"  "$VTRACK" "$ATRACK" "$STRACK"
 	done
 	if [ $COUNTER -eq 0 ]; then
 		printf -- "< No mkv files found!\n"
@@ -232,6 +237,7 @@ convertToMKV(){
 				fi
 			done
 		fi
+		__executeConvertion
 	else
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
@@ -258,8 +264,12 @@ convertToMKV(){
 				done
 				echo
 			fi
+			__executeConvertion
 		done
 	fi
+}
+
+__executeConvertion(){
 	if [ -n "$ARGS" ]; then
 		printf -- "- Executing 'mkvmerge %s'\n" "$ARGS"
 		eval "mkvmerge $ARGS"
