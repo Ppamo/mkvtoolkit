@@ -8,6 +8,7 @@ BLUE="\e[34m"
 GREEN="\e[32m"
 YELLOW="\e[33m"
 BOLD="\e[1m"
+HIGHLIGHT="\e[7m"
 NC="\e[0m"
 
 usage(){
@@ -134,7 +135,7 @@ showTracks() {
 	for i in $FILES ; do
 		COUNTER=$(( COUNTER + 1 ))
 		if [ "${i##*.}" != "mkv" ]; then
-			printf -- "%.2d:${BOLD}%s${NC}\n" "$COUNTER" "$(basename $i)"
+			printf -- "%.2d:${HIGHLIGHT}%s${NC}\n" "$COUNTER" "$(basename $i)"
 			continue
 		fi
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
@@ -202,11 +203,11 @@ setTrackName(){
 	COUNTER=0
 	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \)  | sort )
 	for i in $FILES ; do
-		if [ "${i##*.}" != "mkv" ]; then
-			printf -- "> Skipping file \'$(basename \"$1\")\'\n"
-			continue
-		fi
 		if [ "$FileNumber" == "*" ]; then
+			if [ "${i##*.}" != "mkv" ]; then
+				printf -- "> Skipping file \'$(basename \"$1\")\'\n"
+				continue
+			fi
 			__setTrackName "$i" "$TrackNumber" "$Name"
 		else
 			COUNTER=$(( COUNTER + 1 ))
