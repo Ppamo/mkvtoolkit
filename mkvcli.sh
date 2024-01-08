@@ -300,6 +300,10 @@ convertToMKV(){
 	else
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
+			if [[ $i =~ .*\.mkv ]]; then
+				printf "> Skipping %s\n" "$FILENAME"
+				continue
+			fi
 			printf "> Analizing '%s'\n" "$FILENAME"
 			FILENAME=${FILENAME%.*}
 			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
