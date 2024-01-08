@@ -2,6 +2,7 @@
 
 IFS=$'\n'
 VPATH=/videos
+BPATH=/videos/converted
 CODESFILE="/opt/iso_639-2_codes.txt"
 RED="\e[31m"
 BLUE="\e[34m"
@@ -198,8 +199,16 @@ setTrackName(){
 	printf -- "> Setting file track name:\n"
 	printf "${BOLD}+ Write file number (* to all): _ "
 	read FileNumber
+	if [[ ! $FileNumber =~ ([0-9]+|\*) ]]; then
+		printf "> Invalid file number\n"
+		return
+	fi
 	printf "+ Write track number: _ "
 	read TrackNumber
+	if [[ ! $TrackNumber =~ ([0-9]+) ]]; then
+		printf "> Invalid track number\n"
+		return
+	fi
 	printf "+ Write new name: _ ${NC}"
 	read Name
 	Name=${Name//_/ }
@@ -232,19 +241,35 @@ addTrack(){
 	printf -- "> Adding track to mkv file:\n"
 	printf "${BOLD}+ Write file number (* to all): _ "
 	read FileNumber
-	printf "+ Write track number: _ "
-	read TrackNumber
-	printf "+ Write new name: _ ${NC}"
-	read Name
-	Name=${Name//_/ }
-	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
 
-	if [ -z "$FileNumber" -o -z "$TrackNumber" -o -z "$Name" ]; then
+	if [ -z "$FileNumber" ]; then
 		printf -- "> Error: not enough data to complete the change\n"
 		exit 1
 	fi
 
+	if [[ ! $FileNumber =~ ([0-9]+|\*) ]]; then
+		printf "> Invalid file number\n"
+		return
+	fi
 
+	__getMkvVideoFiles
+	for i in $FILES ; do
+		if [ "$FileNumber" == "*" ]; then
+			if [ "${i##*.}" != "mkv" ]; then
+				printf -- "> Skipping file \'$(basename \"$i\")\'\n"
+				continue
+			fi
+			printf "> Adding track to %s\n" "$i"
+			__AddTracksToFile "$i"
+		else
+			COUNTER=$(( COUNTER + 1 ))
+			[ $COUNTER -ne $FileNumber ] && continue
+			printf "> Adding track to %s\n" "$i"
+			__AddTracksToFile "$i"
+			break
+		fi
+	done
+	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
 }
 
 convertToMKV(){
@@ -275,8 +300,8 @@ convertToMKV(){
 	else
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
-			FILENAME=${FILENAME%.*}
 			printf "> Analizing '%s'\n" "$FILENAME"
+			FILENAME=${FILENAME%.*}
 			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
 			FILEPATH=$(dirname $i)
 			SUBSPATH=$(find "$FILEPATH" -iname subs)
@@ -340,12 +365,77 @@ __backupConvertedFiles(){
 	done
 }
 
+__backupFiles(){
+	FILES=$1
+	mkdir -p "$BPATH"
+	for i in $FILES; do
+		mv "$i" "$BPATH"
+	done
+}
+
 __getVideoFiles(){
-	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) ! -path "$VPATH/converted/*"  | sort )
+	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) ! -path "$BPATH/*"  | sort )
 }
 
 __getMkvVideoFiles(){
-	FILES=$(find $VPATH -iname "*.mkv" ! -path "$VPATH/converted/*"  | sort )
+	FILES=$(find $VPATH -iname "*.mkv" ! -path "$BPATH/*"  | sort )
+}
+
+__AddTracksToFile(){
+	FILEPATH="$1"
+	DSTPATH="$(echo "$FILEPATH" | sed s/.mkv$/.converted.mkv/g)"
+	DIRPATH="$(dirname $FILEPATH)"
+	mkdir -p $DIRPATH/converted
+	FILENAME=$(basename $FILEPATH)
+	FILENAME=${FILENAME%.*}
+
+	OLDIFS=$IFS
+	IFS=$'\n'
+	SUBSFILES=$(find "$DIRPATH" -type f \( -iname "*$FILENAME*" -a \( -iname "*.srt" -o -iname "*.vtt" \) ! -path "$BPATH/*" \) )
+	FILESTOADD=""
+	if [ -z "$SUBSFILES" ]; then
+		printf ">> No subtitles files found!\n"
+		return
+	fi
+	for i in $SUBSFILES; do
+		printf ">> Found subtitle $i, add as new track? [y/n]_ "
+		read OPTION
+		if [ "$OPTION" == "y" ]; then
+			printf ">> Subtitle file content:\n---\n"
+			head -n 15 "$i"
+			printf -- "---\n>> Add subtitle lang code: (ENG|SPA|..) _ "
+			read SUBCODE
+			printf -- "---\n>> Add subtitle lang code name: (English SDH|Español|..) _ "
+			read SUBCODENAME
+			printf ">> Adding sub: %s\n" "$i"
+			FILESTOADD=$(printf "%s\n%s:%s:%s" "$FILESTOADD" "$i" "$SUBCODE" "$SUBCODENAME" )
+		fi
+	done
+	# printf ">> Files to add:\n%s\n" "$FILESTOADD"
+	FILES=""
+	for i in $FILESTOADD; do
+		SUBPATH=${i%%:*}
+		SUBCODE=${i%:*}
+		SUBCODE=${SUBCODE#*:}
+		SUBCODENAME=${i##*:}
+		ARGS=$(printf "%s --language 0:%s --track-name 0:%s '%s'" "$ARGS" "$SUBCODE" "$SUBCODENAME" "$SUBPATH")
+		FILES=$(printf "%s\n%s" "$FILES" "$SUBPATH")
+		# printf ">> SUBCODE: %s - SUBCODENAME: %s - FILEPATH: %s\n" "$SUBCODE" "$SUBCODENAME" "$SUBPATH"
+	done
+	if [ -n "$ARGS" ]; then
+		COMMAND=$(printf "mkvmerge -o '%s' '%s' %s" "$DSTPATH" "$FILEPATH" "$ARGS")
+		printf "> Executing:\n> %s\nejecutar? [y/n] _ " "$COMMAND"
+		read OPTION
+		echo
+		if [ "$OPTION" == "y" ]; then
+			eval "$COMMAND"
+			if [ $? -eq 0 ]; then
+				__backupFiles "$FILES"
+				rm -f "$FILEPATH"
+				mv "$DSTPATH" "$FILEPATH"
+			fi
+		fi
+	fi
 }
 
 COMMAND=$1
@@ -368,6 +458,9 @@ case "$COMMAND" in
 		;;
 	convert)
 		convertToMKV $@
+		;;
+	addTrack)
+		addTrack $@
 		;;
 	*)
 		printf -- "ERROR: Command '%s' not valid\n" "$COMMAND"
