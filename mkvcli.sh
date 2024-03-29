@@ -70,12 +70,18 @@ setDefaultTrack(){
 	printf -- "> Setting default tracks flags\n"
 	echo "> $1"
 	ARGS="$1;"
+	FNAME=$(echo "$ARGS" | grep -Eo "F:[^;]+" )
+	FNAME=${FNAME#F:*}
 	ANAME=$(echo "$ARGS" | grep -Eo "A:[^;]+" )
 	ANAME=${ANAME#A:*}
 	ANAME=${ANAME//_/ }
 	SNAME=$(echo "$ARGS" | grep -Eo "S:[^;]+" )
 	SNAME=${SNAME#S:*}
 	SNAME=${SNAME//_/ }
+	if [[ ! "$i" =~ $FNAME ]]; then
+		printf "> Skipping file $(basename i)\n"
+		continue
+	fi
 	printf -- "> Audio:%s - Subtitle:%s\n" "$ANAME" "$SNAME"
 	if [ -z "$ANAME$SNAME" ]; then
 		printf -- "> Error: no configuration detected\n"
@@ -84,6 +90,11 @@ setDefaultTrack(){
 	
 	__getVideoFiles
 	for i in $FILES ; do
+		if [[ ! "$i" =~ $FNAME ]]; then
+			printf "> Skipping file $i\n"
+			continue
+		fi
+
 		printf -- "> Analizing file \'$(basename \"$i\")\'\n"
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
@@ -91,10 +102,10 @@ setDefaultTrack(){
 		while [[ "$INFO" =~ $PATTERN ]]; do
 			FLAG=0
 			getMatchInfo "${BASH_REMATCH[0]}"
-			printf -- "> Checking track $TRN\n"
 			case "$TYPE" in
 				video)
 					INFO=${INFO/"${BASH_REMATCH[0]}"/}
+					printf -- "> Checking video track $TRN ($NAME)\n"
 					continue
 					;;
 				audio)
@@ -102,6 +113,7 @@ setDefaultTrack(){
 						INFO=${INFO/"${BASH_REMATCH[0]}"/}
 						continue
 					fi
+					printf -- "> Checking audio track $TRN ($NAME)\n"
 					[ "$NAME" == "$ANAME" ] && FLAG=1
 					;;
 				subtitles)
@@ -109,7 +121,10 @@ setDefaultTrack(){
 						INFO=${INFO/"${BASH_REMATCH[0]}"/}
 						continue
 					fi
-					[ "$NAME" == "$SNAME" ] && FLAG=1
+					if [[ $NAME == *$SNAME* ]]; then
+						FLAG=1
+						printf -- "> Match audio track $TRN ${BOLD}$NAME${NC}\n"
+					fi
 					;;
 				*)
 					printf "> Missing track:\n%s\n" "$INFO"
@@ -199,13 +214,13 @@ setTrackName(){
 	printf -- "> Setting file track name:\n"
 	printf "${BOLD}+ Write file number (* to all): _ "
 	read FileNumber
-	if [[ ! $FileNumber =~ ([0-9]+|\*) ]]; then
+	if [[ ! $FileNumber =~ [0-9]+|\* ]]; then
 		printf "> Invalid file number\n"
 		return
 	fi
 	printf "+ Write track number: _ "
 	read TrackNumber
-	if [[ ! $TrackNumber =~ ([0-9]+) ]]; then
+	if [[ ! $TrackNumber =~ [0-9]+ ]]; then
 		printf "> Invalid track number\n"
 		return
 	fi
@@ -247,7 +262,7 @@ addTrack(){
 		exit 1
 	fi
 
-	if [[ ! $FileNumber =~ ([0-9]+|\*) ]]; then
+	if [[ ! $FileNumber =~ \([0-9]+|\*\) ]]; then
 		printf "> Invalid file number\n"
 		return
 	fi
@@ -286,6 +301,9 @@ convertToMKV(){
 		ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${FILES%.*}" "$FILES" "$FILENAME")
 		if [ -n "$SUBS" ]; then
 			printf "> Found %d subs:\n%s\n" "$SUBS_COUNT" "$SUBS"
+			if [ $SUBS_COUNT -gt 0 ]; then
+				printf "> Subs should be the lang code between dots, ie: sub.en.001.srt"
+			fi
 			for i in $SUBS; do
 				echo "$i" | grep -Eo '\.[a-z]{2,4}\.' > /dev/null
 				if [ $? -eq 0 ]; then
