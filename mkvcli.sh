@@ -60,7 +60,7 @@ getMatchInfo(){
 	Lang=${Lang#*: }
 	DTrack=$(echo "$1" | grep '+ "Default track" flag:')
 	DTrack=${DTrack#*: }
-	NAME=$(echo "$1" | grep '+ Name:')
+	NAME=$(echo "$1" | grep '+ Name:' | head -n 1)
 	NAME=${NAME#*: }
 	[ -z "$NAME" ] && NAME="$Lang"
 	# printf -- "> TYPE:%s;TRNumber:%s;TRN:%s;Lang:%s;DTrack:%s;NAME:%s\n" "$TYPE" "$TRNumber" "$TRN" "$Lang" "$DTrack" "$NAME"
@@ -68,7 +68,6 @@ getMatchInfo(){
 
 setDefaultTrack(){
 	printf -- "> Setting default tracks flags\n"
-	echo "> $1"
 	ARGS="$1;"
 	FNAME=$(echo "$ARGS" | grep -Eo "F:[^;]+" )
 	FNAME=${FNAME#F:*}
@@ -78,11 +77,6 @@ setDefaultTrack(){
 	SNAME=$(echo "$ARGS" | grep -Eo "S:[^;]+" )
 	SNAME=${SNAME#S:*}
 	SNAME=${SNAME//_/ }
-	if [[ ! "$i" =~ $FNAME ]]; then
-		printf "> Skipping file $(basename i)\n"
-		continue
-	fi
-	printf -- "> Audio:%s - Subtitle:%s\n" "$ANAME" "$SNAME"
 	if [ -z "$ANAME$SNAME" ]; then
 		printf -- "> Error: no configuration detected\n"
 		exit 1
@@ -99,13 +93,15 @@ setDefaultTrack(){
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		PATTERN='@[^@]*'
 		ARGS=''
+		AFOUND=0
+		SFOUND=0
 		while [[ "$INFO" =~ $PATTERN ]]; do
 			FLAG=0
 			getMatchInfo "${BASH_REMATCH[0]}"
 			case "$TYPE" in
 				video)
 					INFO=${INFO/"${BASH_REMATCH[0]}"/}
-					printf -- "> Checking video track $TRN ($NAME)\n"
+					# printf -- "> Checking video track $TRN ($NAME)\n"
 					continue
 					;;
 				audio)
@@ -113,17 +109,22 @@ setDefaultTrack(){
 						INFO=${INFO/"${BASH_REMATCH[0]}"/}
 						continue
 					fi
-					printf -- "> Checking audio track $TRN ($NAME)\n"
-					[ "$NAME" == "$ANAME" ] && FLAG=1
+					# printf -- "> Checking audio track $TRN ($NAME)\n"
+					if [[ "$NAME" == $ANAME ]]; then
+						FLAG=1
+						AFOUND=$(( AFOUND+1 ))
+						printf -- "> Match audio track $TRN ${BOLD}$NAME${NC}\n"
+					fi
 					;;
 				subtitles)
 					if [ -z "$SNAME" ];then
 						INFO=${INFO/"${BASH_REMATCH[0]}"/}
 						continue
 					fi
-					if [[ $NAME == *$SNAME* ]]; then
+					if [[ $NAME == $SNAME ]]; then
 						FLAG=1
-						printf -- "> Match audio track $TRN ${BOLD}$NAME${NC}\n"
+						SFOUND=$(( SFOUND+1 ))
+						printf -- "> Match sub track $TRN ${BOLD}$NAME${NC}\n"
 					fi
 					;;
 				*)
@@ -133,6 +134,14 @@ setDefaultTrack(){
 			ARGS="$ARGS --edit track:$TRN --set flag-default=$FLAG"
 			INFO=${INFO/"${BASH_REMATCH[0]}"/}
 		done
+		if [ $(( $AFOUND + $SFOUND )) -eq 0 ]; then
+			printf "> No matches found\n"
+			continue
+		fi
+		if [ $AFOUND -gt 1 -o $SFOUND -gt 1 ]; then
+			printf "> More than 1 match found\n"
+			continue
+		fi
 		LINE=$(printf -- "/usr/bin/mkvpropedit \"%s\" %s" "$i" "$ARGS")
 		printf -- "> Executing:\n%s\n" "$LINE"
 		eval $LINE
@@ -149,11 +158,11 @@ showTracks() {
 	__getVideoFiles
 	COUNTER=0
 	for i in $FILES ; do
-		COUNTER=$(( COUNTER + 1 ))
 		if [ "${i##*.}" != "mkv" ]; then
 			printf -- "%.2d\n${HIGHLIGHT}%s${NC}\n" "$COUNTER" "$(basename $i)"
 			continue
 		fi
+		COUNTER=$(( COUNTER + 1 ))
 		INFO=$(mkvinfo "$i" | sed '/|+ Tags/,$d' | sed '/|+ Chapters/,$d' | sed "s/@/ /g" | sed "s/| + Track/@/g")
 		TITLE=$(echo "$INFO" | grep "| + Title: " | sed "s/| + Title: //")
 		if [ -z "$TITLE" ]; then
@@ -182,7 +191,7 @@ showTracks() {
 					STRACK="$STRACK;${DT}${TRN}:${NAME}"
 					;;
 				*)
-					# printf "> Missing track:\n%s\n" "$INFO"
+					printf "> Undetected track:\n%s\n" "$INFO"
 					;;
 			esac
 			unset DT
@@ -322,7 +331,6 @@ convertToMKV(){
 				printf "> Skipping %s\n" "$FILENAME"
 				continue
 			fi
-			printf "> Analizing '%s'\n" "$FILENAME"
 			FILENAME=${FILENAME%.*}
 			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
 			FILEPATH=$(dirname $i)
@@ -349,13 +357,27 @@ convertToMKV(){
 				# If no sub was found on folders, just look for a single file on root folder
 				SUBSFILES=$(find "$FILEPATH" -iname "*${FILENAME}*" -a -iname "*.srt")
 				for j in $SUBSFILES ; do
-					# printf -- ">> %s" "$j\n"
-					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "und" "Default" "$j" | sed 's/\n//')
+					printf -- "> Analizyng subtitle file ${BOLD}%s${NC}\n" "$(basename $j)"
+					SUBNAME=$(basename $j)
+					SUBNAME=${SUBNAME%*.}
+					SUBNAME=${SUBNAME%.*}
+					SUBCODE=${SUBNAME##*.}
+					grep -E "^$SUBCODE[[:space:]]" "$CODESFILE" >/dev/null 2>&1
+					if [ $? -ne 0 ]; then
+						printf "> No language code detected, skipping\n"
+						continue
+					fi
+					SUBNAME=${SUBNAME%.*}
+					SUBNAME=${SUBNAME##*.}
+					printf "> Language name and code detected: ${BOLD}%s - %s${NC}\n" "$SUBNAME" "$SUBCODE"
+
+					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$j" | sed 's/\n//')
 				done
 			fi
 			# printf "> ARGS: $ARGS\n"
 			__executeConvertion
 			__backupConvertedFiles "$i"
+			echo
 		done
 	fi
 }
