@@ -325,6 +325,7 @@ convertToMKV(){
 		__executeConvertion
 		__backupConvertedFiles "$FILES"
 	else
+		# Probably a serie, multiple video files
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
 			if [[ $i =~ .*\.mkv ]]; then
@@ -333,50 +334,32 @@ convertToMKV(){
 			fi
 			FILENAME=${FILENAME%.*}
 			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
+			FILES_TO_BACKUP="$i"
 			FILEPATH=$(dirname $i)
-			SUBSPATH=$(find "$FILEPATH" -iname subs)
-			if [ -d "$SUBSPATH/$FILENAME" ]; then
-				SUBSCOUNT=0
-				for j in $(cd "$SUBSPATH/$FILENAME" && ls -1 *.srt | sort -n); do
-					# subs format: N_Name.srt
-					[ $SUBSCOUNT -eq 0 ] && printf -- "- Subtitles found!\n"
-					SUBNAME=$(basename $j .srt)
-					echo "$SUBNAME" | grep -E '^[0-9]+_' > /dev/null 2>&1
-					[ $? -eq 0 ] && SUBNAME=${SUBNAME#*_}
-					SUBNAME=${SUBNAME//_/ }
-					SUBCODE=$(grep -Ii "[[:space:]]${SUBNAME%* SDH}\$" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
-					if [ -z "$SUBCODE" ]; then
-						SUBCODE=$(grep -Ii "${SUBNAME%* SDH}" $CODESFILE | head -n 1 | grep -Eo "^[a-zA-Z]+")
-					fi
-					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$SUBSPATH/$FILENAME/$j" | sed 's/\n//')
-					SUBSCOUNT=$(( SUBSCOUNT + 1 ))
-				done
-				echo
-			fi
-			if [ -z "$SUBSCOUNT" ]; then
-				# If no sub was found on folders, just look for a single file on root folder
-				SUBSFILES=$(find "$FILEPATH" -iname "*${FILENAME}*" -a -iname "*.srt")
-				for j in $SUBSFILES ; do
-					printf -- "> Analizyng subtitle file ${BOLD}%s${NC}\n" "$(basename $j)"
-					SUBNAME=$(basename $j)
-					SUBNAME=${SUBNAME%*.}
-					SUBNAME=${SUBNAME%.*}
-					SUBCODE=${SUBNAME##*.}
-					grep -E "^$SUBCODE[[:space:]]" "$CODESFILE" >/dev/null 2>&1
-					if [ $? -ne 0 ]; then
-						printf "> No language code detected, skipping\n"
-						continue
-					fi
-					SUBNAME=${SUBNAME%.*}
-					SUBNAME=${SUBNAME##*.}
-					printf "> Language name and code detected: ${BOLD}%s - %s${NC}\n" "$SUBNAME" "$SUBCODE"
-
-					ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$j" | sed 's/\n//')
-				done
-			fi
+			SUBSFILES=$(find "$FILEPATH" -iname "*.srt")
+			for j in $SUBSFILES ; do
+				echo "$j" | grep "$FILENAME" > /dev/null 2>&1
+				if [ $? -ne 0 ]; then
+					continue
+				fi
+				printf -- "> Analizyng subtitle file '%s'\n" "${j#/*/*}"
+				SUBNAME=$(basename $j .srt)
+				SUBCODE=${SUBNAME##* - }
+				SUBNAME=${SUBNAME% - *}
+				grep -E "^$SUBCODE[[:space:]]" "$CODESFILE" >/dev/null 2>&1
+				if [ $? -ne 0 ]; then
+					printf "> No language code detected, skipping\n"
+					continue
+				fi
+				SUBNAME=${SUBNAME%.*}
+				SUBNAME=${SUBNAME##*.}
+				printf "> Language name and code detected: ${BOLD}%s/%s${NC}\n" "$SUBNAME" "$SUBCODE"
+				ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$j" | sed 's/\n//')
+				FILES_TO_BACKUP=$(printf "%s\n%s" "$FILES_TO_BACKUP" "$j")
+			done
 			# printf "> ARGS: $ARGS\n"
 			__executeConvertion
-			__backupConvertedFiles "$i"
+			__backupMultipleConvertedFiles "$FILES_TO_BACKUP"
 			echo
 		done
 	fi
@@ -390,7 +373,6 @@ __executeConvertion(){
 			printf -- "< Error executing command\n"
 			exit 1
 		fi
-		printf "\n\n"
 	fi
 }
 
@@ -405,7 +387,23 @@ __backupConvertedFiles(){
 	FILESTOBACKUP=$(find "$DIRPATH" -type f -iname "*$FILENAME*" ! -iname "*.mkv" )
 	printf "> Backing up files:\n"
 	for i in $FILESTOBACKUP; do
-		mv -v "$i" "$DIRPATH/converted"
+		printf "> $i -> $DIRPATH/converted\n"
+		# mv -v "$i" "$DIRPATH/converted"
+	done
+}
+
+__backupMultipleConvertedFiles(){
+	DST="$VPATH/converted"
+	mkdir -p "$DST"
+	printf "> Backing up files:\n"
+	for i in $1; do
+		FILEDST=$(printf "%s/%s" "$DST" "$i")
+		mkdir -p $(dirname "$FILEDST")
+		mv -v "$i" "$FILEDST"
+	done
+	find -name ".DS_Store" -exec rm -f {} \;
+	while [ $(find /videos -type d -empty  | wc -l) -gt 0 ]; do
+		find /videos -type d -empty -delete
 	done
 }
 
