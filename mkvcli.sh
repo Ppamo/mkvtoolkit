@@ -271,7 +271,7 @@ addTrack(){
 		exit 1
 	fi
 
-	if [[ ! $FileNumber =~ \([0-9]+|\*\) ]]; then
+	if [[ ! $FileNumber =~ [0-9]+|\* ]]; then
 		printf "> Invalid file number\n"
 		return
 	fi
