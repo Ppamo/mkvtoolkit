@@ -266,10 +266,7 @@ addTrack(){
 	printf "${BOLD}+ Write file number (* to all): _ "
 	read FileNumber
 
-	if [ -z "$FileNumber" ]; then
-		printf -- "> Error: not enough data to complete the change\n"
-		exit 1
-	fi
+	[ -z "$FileNumber" ] && FileNumber="*"
 
 	if [[ ! $FileNumber =~ [0-9]+|\* ]]; then
 		printf "> Invalid file number\n"
@@ -301,6 +298,10 @@ convertToMKV(){
 	__getVideoFiles
 	FILES_COUNT=$(echo "$FILES" | wc -l)
 	if [ "$FILES_COUNT" -eq 1 ]; then
+		if [ $(basename "$FILES") = "VIDEO_TS" ]; then
+			__convertFromDVD "$FILES"
+			exit 0
+		fi
 		# This is probably a movie, a single video file, with probably a single sub title in root folder
 		printf "> Found movie\n%s\n" "$FILES"
 		SUBS=$(find $VPATH -iname "*.srt")
@@ -328,7 +329,7 @@ convertToMKV(){
 		# Probably a serie, multiple video files
 		for i in $FILES ; do
 			FILENAME=$(basename "$i")
-			if [[ $i =~ .*\.mkv ]]; then
+			if [[ "$i" =~ .*\.mkv ]]; then
 				printf "> Skipping %s\n" "$FILENAME"
 				continue
 			fi
@@ -336,23 +337,45 @@ convertToMKV(){
 			ARGS=$(printf -- '-o "%s.mkv" "%s" --title "%s"' "${i%.*}" "$i" "$FILENAME")
 			FILES_TO_BACKUP="$i"
 			FILEPATH=$(dirname $i)
-			SUBSFILES=$(find "$FILEPATH" -iname "*.srt")
+			SUBSFILES=$(find "$FILEPATH" -iname "*.srt" | grep "$FILENAME" | sort -n)
 			for j in $SUBSFILES ; do
-				echo "$j" | grep "$FILENAME" > /dev/null 2>&1
-				if [ $? -ne 0 ]; then
-					continue
+				printf -- "> Analizyng subtitle file '%s'\n" "${j%*/*/}"
+				# count the separators in order to detect the file name format
+				SUBFILENAME=$(basename $j)
+				SUBFILENAME=${SUBFILENAME%.*}
+				unset SUBCODE SUBNAME
+				LINES=$(printf "$SUBFILENAME" | sed "s/ - /\n/g" | wc -l)
+				if [ $LINES -gt 1 ]; then
+					# {order} - {name} - {code}
+					SUBNAME=${SUBFILENAME#* - }
+					SUBCODE=${SUBNAME#* - }
+					SUBNAME=${SUBNAME% - *}
+					SUBCODE=$(printf "$SUBCODE" | tr '[:lower:]' '[:upper:]')
+					grep -E "^$SUBCODE[[:space:]]" "$CODESFILE" >/dev/null 2>&1
+					[ $? -ne 0 ] && unset SUBCODE
 				fi
-				printf -- "> Analizyng subtitle file '%s'\n" "${j#/*/*}"
-				SUBNAME=$(basename $j .srt)
-				SUBCODE=${SUBNAME##* - }
-				SUBNAME=${SUBNAME% - *}
-				grep -E "^$SUBCODE[[:space:]]" "$CODESFILE" >/dev/null 2>&1
-				if [ $? -ne 0 ]; then
+				if [ -z "$SUBCODE" ]; then
+					LINES=$(printf "$SUBFILENAME" | sed "s/_/\n/g" | wc -l)
+					if [ $LINES -eq 1 ]; then
+					# {order}_{name}
+						SUBNAME=${SUBFILENAME#*_}
+						if [ ${#SUBNAME} -eq 3 ]; then
+							SUBCODE=$(grep -iE "^$SUBNAME[[:space:]]" "$CODESFILE" | head -n 1 | grep -Eo "^[A-Z]{3}")
+							SUBNAME=$(grep -E "^$SUBCODE" "$CODESFILE" | head -n 1 | sed "s/^[A-Z]*[[:space:]]*//g")
+						else
+							SUBCODE=$(grep -iE "^[A-Z]*[[:space:]]*$SUBNAME" "$CODESFILE" | head -n 1 | grep -Eo "^[A-Z]{3}")
+							if [ -z "$SUBCODE" ]; then
+								SUBCODE=$(grep -i "$SUBNAME" "$CODESFILE" | head -n 1 | grep -Eo "^[A-Z]{3}")
+							fi
+						fi
+					fi
+				fi
+
+				if [ -z "$SUBCODE" ]; then
 					printf "> No language code detected, skipping\n"
 					continue
 				fi
-				SUBNAME=${SUBNAME%.*}
-				SUBNAME=${SUBNAME##*.}
+
 				printf "> Language name and code detected: ${BOLD}%s/%s${NC}\n" "$SUBNAME" "$SUBCODE"
 				ARGS=$(printf -- '%s --language 0:%s --track-name 0:"%s" "%s"' "$ARGS" "$SUBCODE" "$SUBNAME" "$j" | sed 's/\n//')
 				FILES_TO_BACKUP=$(printf "%s\n%s" "$FILES_TO_BACKUP" "$j")
@@ -376,6 +399,19 @@ __executeConvertion(){
 	fi
 }
 
+__convertFromDVD(){
+	printf  "> Converting DVD from %s\n" "$1"
+	OLDIFS=$IFS
+	IFS=$' '
+	FILES=$(find $VPATH -iname "*.vob" -size +250M -exec printf "{} " \; | sort)
+	for i in $FILES; do
+		printf "> Converting %s:\n" $i
+		FILENAME=$(basename $i)
+		mkvmerge -o $VPATH/$FILENAME.mkv --title "$FILENAME" $i
+	done
+	IFS=$OLDIFS
+}
+
 __backupConvertedFiles(){
 	FILEPATH="$1"
 	DIRPATH="$(dirname $1)"
@@ -388,8 +424,9 @@ __backupConvertedFiles(){
 	printf "> Backing up files:\n"
 	for i in $FILESTOBACKUP; do
 		printf "> $i -> $DIRPATH/converted\n"
-		# mv -v "$i" "$DIRPATH/converted"
+		mv -v "$i" "$DIRPATH/converted"
 	done
+	IFS=$OLDIFS
 }
 
 __backupMultipleConvertedFiles(){
@@ -416,7 +453,8 @@ __backupFiles(){
 }
 
 __getVideoFiles(){
-	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" \) ! -path "$BPATH/*"  | sort )
+	FILES=$(find $VPATH  \( -iname "*.mkv" -o -iname "*.mp4" -o -iname "*.avi" -o -name "VIDEO_TS" \) ! -path "$BPATH/*"  | sort )
+	printf "> Found files:\n%s\n" "$FILES"
 }
 
 __getMkvVideoFiles(){
@@ -449,6 +487,7 @@ __AddTracksToFile(){
 			read SUBCODE
 			printf -- "---\n>> Add subtitle lang code name: (English SDH|Español|..) _ "
 			read SUBCODENAME
+			SUBCODENAME=$(echo "$SUBCODENAME" | tr ' ' '_')
 			printf ">> Adding sub: %s\n" "$i"
 			FILESTOADD=$(printf "%s\n%s:%s:%s" "$FILESTOADD" "$i" "$SUBCODE" "$SUBCODENAME" )
 		fi
