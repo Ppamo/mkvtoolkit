@@ -310,10 +310,10 @@ repair(){
 		if [ "$FileNumber" == "*" ]; then
 			if [ "${i##*.}" != "mkv" ]; then
 				printf -- "> Skipping file \'$(basename \"$i\")\'\n"
-				__repairFile "$i"
 				continue
 			fi
 			printf "> Repairing file to %s\n" "$i"
+			__repairFile "$i"
 		else
 			COUNTER=$(( COUNTER + 1 ))
 			[ $COUNTER -ne $FileNumber ] && continue
@@ -572,7 +572,7 @@ case "$COMMAND" in
 		setTitle  $@
 		;;
 	showTracks)
-		showTracks $@
+		time showTracks $@
 		;;
 	setDefaultTrack)
 		setDefaultTrack $@
