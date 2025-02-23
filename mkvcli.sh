@@ -263,7 +263,7 @@ setTrackName(){
 
 addTrack(){
 	printf -- "> Adding track to mkv file:\n"
-	printf "${BOLD}+ Write file number (* to all): _ "
+	printf "${BOLD}+ Write file number (* to all): _ ${NC}"
 	read FileNumber
 
 	[ -z "$FileNumber" ] && FileNumber="*"
@@ -291,6 +291,49 @@ addTrack(){
 		fi
 	done
 	# printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
+}
+
+repair(){
+	printf -- "> Repairing mkv file:\n"
+	printf "${BOLD}+ Write file number (* to all): _ ${NC}"
+	read FileNumber
+
+	[ -z "$FileNumber" ] && FileNumber="*"
+
+	if [[ ! $FileNumber =~ [0-9]+|\* ]]; then
+		printf "> Invalid file number\n"
+		return
+	fi
+
+	__getMkvVideoFiles
+	for i in $FILES ; do
+		if [ "$FileNumber" == "*" ]; then
+			if [ "${i##*.}" != "mkv" ]; then
+				printf -- "> Skipping file \'$(basename \"$i\")\'\n"
+				__repairFile "$i"
+				continue
+			fi
+			printf "> Repairing file to %s\n" "$i"
+		else
+			COUNTER=$(( COUNTER + 1 ))
+			[ $COUNTER -ne $FileNumber ] && continue
+			printf "> Repairing file to %s\n" "$i"
+			__repairFile "$i"
+			break
+		fi
+	done
+	printf -- "> File:%s - Track:%s - Name:%s\n" "$FileNumber" "$TrackNumber" "$Name"
+}
+
+__repairFile(){
+	printf "> repairing ${BOLD}$1${NC} file:\n"
+	mkvmerge -o "$1.new" "$1"
+	if [ $? -eq 0 ]; then
+		printf "< File repaired!\n< Cleaning up remaining files\n"
+		rm -v -f "$1"
+		mv -v "$1.new" "$1"
+		printf "< Done\n"
+	fi
 }
 
 convertToMKV(){
@@ -542,6 +585,9 @@ case "$COMMAND" in
 		;;
 	addTrack)
 		addTrack $@
+		;;
+	repair)
+		repair $@
 		;;
 	*)
 		printf -- "ERROR: Command '%s' not valid\n" "$COMMAND"
